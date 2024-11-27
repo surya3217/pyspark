@@ -1,0 +1,9 @@
+Write a mapper that will provide the length of each word.
+
+Write a filter that will remove all the words that are either starting from a or c from the rdd
+
+Write a transformation flow that will return the word count of each word present in the file as (key, value) pair
+
+Write a code to calculate the average score in each month
+
+Write a code to calculate the Minimum and Maximum rating given by each city.

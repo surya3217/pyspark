@@ -1,0 +1,269 @@
+
+>> Install java:
+https://www.oracle.com/in/java/technologies/downloads/#jdk17-mac
+
+arm64 dmg version, for mac
+
+> Path for java home path:
+>> /usr/libexec/java_home -v17
+/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+
+> open ~/.bash_profile
+
+> touch ~/.bash_profile  // create if not exist
+
+>create variable:
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+
+// compile file to run
+> source ~/.bash_profile
+
+> echo $JAVA_HOME   // to check variable
+
+> javac -version   // check version
+
+############
+
+* Risilient distributed dataset (RDD)
+> RDD : immutable collection of objects
+> RDD is created by using: Spark context
+
+> Transformations and Actions:
+
+
+### spark run loccally:
+cd /Users/suraj/Desktop/spark
+source ./pyspark-env/bin/activate
+
+spark-submit "spark_first.py"
+
+> warning like: To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+24/09/06 17:43:40 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+
+* means due to multiple version of python, not able to take python
+* need to set path:
+> set PYSPARK_PYTHON=python3
+
+#########
+
+* map(): maper of data from one state to other.
+it will create new RDD.
+
+############
+
+withColumn() == to manilupalate column data add or subtract, like lambda function in pandas
+withColumnRenamed() == to rename columns
+df.filter(col(name)=='xyz') == applied only condition to get data
+df.select('course') == applied only column name to get data
+df.count() == total rows
+distinct() == first select column then apply distinct
+dropduplicate() == 
+sort()
+orderBy()
+GroupBy()
+aggregate functions: sum, max, min,
+
+eg)
+df = df.withColumn("total marks", lit(120))
+df = df.withColumn("avg marks", col("marks")/col("total marks")*100 )
+
+df.filter(col("total_enrollments") > 85 ).show()
+df.select('age', 'gender', 'course').distinct().show()
+
+df_office.sort('bonus').show()
+df_office.sort(df_office.age.desc(), df_office.salary.asc() ).show()
+
+df.groupBy("department").agg(sum("salary"), min("salary") ).show()
+df.groupBy("course", "gender").agg(count(*)).show()
+
+####
+21 objects
+UDF: user defined functions, manipulate columns values and added in existing dataframe
+
+def get_total_salary(salary, bonus):
+    return salary + bonus
+
+totalSalaryUDF =  (lambda x,y: get_total_salary(x,y), IntegerType() )  ## IntegerType(): returning type of function
+df.withColumn("total_salary",  totalSalaryUDF(df.salary, df.bonus)).show()
+
+########
+
+> cache and persist: to store data temporary in memory
+df.show()
+cache()
+df.show()
+#########
+
+type(df)
+rdd = df.rdd
+type(rdd)
+> rdd is there for complex grouping instead of df including parallalism
+########
+
+> can run sql queries as well on df:
+df.createOrReplaceTempView("Student") 
+spark.sql("select course, gender, sum(marks) from Student group by course, gender").show()
+
+#####
+writing dataframe, exporting
+df.write.options(header='True').csv('path')  ## no need to mention filename explicitely
+
+write fmodes:
+overwrite
+append
+ignore
+error
+
+df.write.mode("overwrite").options(header='True').csv('file/tables/student/output')
+###########
+
+5 Nov 2024:
+Collaborative filtering:
+eg) like recommendation system, show data as per user search history and interest and behaviour
+
+Utility Matrix:
+eg)
+user having movie rating for Netflix
+
+Explicit and Implicit rating:
+
+Expected result:
+
+Handson:
+
+Join DF:
+############ file, common column namme, of foreign key, type of join
+rating_df.join(movie_df, 'movie_id', 'left'),show()
+
+#############
+Train and Test:
+
+(train, test) = ratings.randomSplit([0.8, 0.2])
+80-20 ratio
+
+tran.show()
+test.show()
+ 
+train.count()
+
+#############
+
+Now creating model:
+
+from pyspark.ml.recommendation import ALS
+als = ALS(userCol= "", itemCol="", ratingCol="", nonnegeative= True, implicitPrefs=False, coldStartStreategy="drop")
+
+itemCol: on which column we require recommendation
+ratingCol : need to specify column
+coldStartStreategy: drop, if any entry is blank than that will be dropped, to get accurate result
+non-negative: don't consider -ive rating to make it better
+
+#####
+Hyperparameter tuning and cross validation:
+
+param_grid: for creating models
+evaluator: for eva;luating models
+crossValidator: for cross valuate all models
+
+model = cv.fir(train)
+bestModel = model.bestModel
+testPrediction = bestModel.tranform(test)
+RSME = evaluator(testPredictions)
+print(RSME)
+
+RSME tells the precision of best model
+recommendations = best_model.recommendForAllUsers(5)
+df = recommendations
+
+df2 = df.withColumn("movieid_rating", explode("recommendations")) : use explode to get data from json like object and expand to single values
+df2.select("userId", col("movieid_rating") )
+df2.select("userId", col("movieid_rating.movieId"), col("movie_rating.rating"))
+
+########
+
+ETL pipeline: 
+Extract transform load
+In which we are reading the data and performing some transformations and than loading the data on some output destination.
+
+Read data: form csv, txt, jdbc
+pyspark == ETL
+output, load: csv, txt, jdbc
+
+why spark: supports multiple input and output format, support etl, 
+
+13 Nov:
+14 Nov:
+use of databricks
+> extracting data from source file txt file
+> transformation
+> load
+
+csv on DBFS ==> pyspark on Databricks Notebook ==> load in Postgres in AWS RDS
+
+###########
+Project:
+
+CDC: Change data capture replication on going:
+> Lambda function: are simple python script that can invoke by any service and that can invoke any service.
+It require 2 ends, first is input and 2nd is output.
+
+Lambda function invoke glue, pyspark and provide name of the file  an d than read temp HDFS/S3 file.
+
+DMS: database migration service
+reuired input source: from mysql database, any changes in DBFS
+required target source: store changes in s3
+
+vid 148 > dms full load
+
+######
+
+Glue Job, environment in AWS for pyspark === Databricks, both are platform to run pyspark consider
+
+from pyspark.sql.functions import when 
+
+> AWS cloudwatch : monitor resources and application, used to make logs 
+
+def lambda_handler(event, context):
+
+event: json records 
+
+> Glue Job: Glue is a fully managed ETL service
+> IAM: manage access to aws resources
+
+lambda function ===> output
+^^
+^^
+^^
+Input
+
+> Athena: query data in s3 using sql
+
+############
+
+>> Spark Streaming:
+
+data stream => unbounded table
+New rows appended to unbouneded table
+
+Stream RDD:
+
+from pyspark.streaming import StreamingContext
+
+-- streaming using cluster
+> while streaming files=, each file is treated as independently, no relation between lst and current file
+> here we getting data in batch and we used to stream that
+
+#######
+
+## streaming dataframe df:
+> for dataframe upload file in "DBFS" in databricks, in table section, as each dataframe is a table
+
+dbutils.fs.rm("/fileStore/tables", True),  removing all existing file
+take files for streaming only after running spark session
+
+> DF aggregation:
+
+
+
+ 
+
