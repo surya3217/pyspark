@@ -49,7 +49,7 @@ spark-submit "spark_first.py"
 * map(): maper of data from one state to other.
 it will create new RDD.
 
-############
+############ dataframe functions
 
 withColumn() == to manilupalate column data add or subtract, like lambda function in pandas
 withColumnRenamed() == to rename columns
@@ -263,7 +263,35 @@ take files for streaming only after running spark session
 
 > DF aggregation:
 
+#######
 
+>> window functions:
 
- 
+> difference bet groupBy and window function
+
+> Ranking Function: The function returns the statistical rank of a given value for each row in a partition or group. The goal of this function is to provide consecutive 
+                    numbering of the rows in the resultant column, set by the order selected in the Window.partition for each partition specified in the OVER clause. E.g. 
+                    row_number(), rank(), dense_rank(), etc.
+row_number(), rank(), dense_rank()
+
+row_number: always unique, function is used to gives a sequential number to each row present in the table.
+rank: can be duplicate for same values eg. salary, it have some gap,   1,2,3,4,4,4,7,8
+dense_rank: can also be duplicate for same values eg. salary, but their is no gap,  1,2,3,4,4,4,5,6
+
+>> window functions contains:
+> cume_dist().window(): cume_dist() window function is used to get the cumulative distribution within a window partition. It is similar to CUME_DIST in SQL.
+eg) df.withColumn("cume_dist",
+              cume_dist().over(windowPartition)).show()
+
+> lag().window() : A lag() function is used to access previous rows’ data as per the defined offset value in the function. 
+eg) df.withColumn("Lag", lag("Salary", 2).over(windowPartition)) \
+    .show()
+
+here lag value is 2, means that it find previous row by going up 2 for mention column ie. salary
+
+> lead(): function is used to access next rows data as per the defined offset value in the function.
+eg) df.withColumn("Lead", lead("salary", 2).over(windowPartition)) \
+      .show()
+
+> here lead value is 2, means that it find next row by going down 2 for mention column ie. salary
 

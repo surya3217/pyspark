@@ -1,0 +1,76 @@
+Uber Data:
+1) Which date had the most completed trips during the two-week period?
+
+2) What was the highest number of completed trips within a 24-hour period?
+
+3) Which hour of the day had the most requests during the two-week period?
+
+4) What percentages of all zeroes during the two-week period occurred on weekend (Friday at 5 pm to Sunday at 3 am)? 
+Tip: The local time value is the start of the hour (e.g. 15 is the hour from 3:00 pm - 4:00 pm)
+
+5) What is the weighted average ratio of completed trips per driver during the two-week period? 
+Tip: “Weighted average” means your answer should account for the total trip volume in each hour to determine the most accurate number in the whole period.
+
+6) In drafting a driver schedule in terms of 8 hours shifts, when are the busiest 8 consecutive hours over the two-week period in terms of unique requests? 
+A new shift starts every 8 hours. Assume that a driver will work the same shift each day.
+
+7) True or False: Driver supply always increases when demand increases during the two-week period. Tip: Visualize the data to confirm your answer if needed.
+
+8) In which 72-hour period is the ratio of Zeroes to Eyeballs the highest?
+
+9) If you could add 5 drivers to any single hour of every day during the two-week period, which hour should you add them to? 
+Hint: Consider both rider eyeballs and driver supply when choosing.
+
+10) Looking at the data from all two weeks, which time might make the most sense to consider a true “end day” instead of midnight? 
+(i.e when are supply and demand at both their natural minimums)
+
+####### Approach:
+
+> use groupBy with agg always.
+> window functions
+> 
+1) date wise groupby, than count completed trip
+
+2) 
+
+3) groupby of time local with date, than check requests
+
+4) total zeros occrance
+zeros occurance on weekend Friday at 5 pm to Sunday at 3 am, 14, 15, 16 -- 21 22 23
+than fined percentages
+df1 = df.filter( (col('date') >=14 & col('Time (Local)') >=17) | (col('date') <=16 & col('Time (Local)') <3) ).agg(sum('Zeroes'))  ## hard coded
+df2 = df.filter( (col('date') >=21 & col('Time (Local)') >=17) | (col('date') <=23 & col('Time (Local)') <3) ).agg(sum('Zeroes'))
+
+5) total completed trip volume 
+total trip volume in each hour
+
+total hours : 14 days * 24 hour = 
+Weighted average = total trip volume / total hours
+
+a= (completed trips per driver during the two-week period) // total no. of completed trips
+
+a= (completed trip / unique driver, total no of completed trips for that hour, then sum result) // total no. of completed trips
+
+completed_per_driver = df["Completed Trips"] / df["Unique Drivers"]
+
+avg_completed_per_driver = avg(completed_per_driver)
+
+total_completed_trips = sum("Completed Trips").alias("total_completed_trips")
+
+weighted_ratio = withColumn("weighted_ratio", col("avg_completed_per_driver") * col("total_completed_trips")) 
+
+weighted average ratio = sum("weighted_ratio") / sum("total_completed_trips")
+
+6) 
+8 hour == 3 shifts
+0-7, 8-15, 15-23
+for busiest, find total requests or eyeballs, per shift per day
+
+7) graph between requests vs time and driver vs time
+
+8) Zeroes to Eyeballs in 72 hour period == 3 day window
+
+9) busiest place, check with Q.6, where demand high and supply is low
+
+10) time when driver and request are zeroes or minimums
+
